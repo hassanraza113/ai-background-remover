@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VibeCut Pro - AI Background Remover</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/removal.js/1.0.0/removal.min.js"></script>
+    <style>
+        :root {
+            --primary-purple: #6a0dad;
+            --secondary-blue: #1e88e5;
+            --accent-red: #ff4081;
+            --dark-bg: #121212;
+            --light-text: #f5f5f5;
+            --gradient-bg: linear-gradient(135deg, var(--primary-purple) 0%, var(--secondary-blue) 100%);
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--dark-bg);
+            color: var(--light-text);
+            background-image: 
+                radial-gradient(circle at 25% 25%, rgba(106, 13, 173, 0.2) 0%, transparent 50%),
+                radial-gradient(circle at 75% 75%, rgba(30, 136, 229, 0.2) 0%, transparent 50%);
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background: var(--gradient-bg);
+            padding: 20px 0;
+            border-radius: 0 0 20px 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            margin-bottom: 30px;
+        }
+        
+        .logo {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(to right, #ff4081, #1e88e5);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-align: center;
+            margin: 0;
+        }
+        
+        .tagline {
+            text-align: center;
+            font-size: 1.2rem;
+            opacity: 0.9;
+            margin-top: 10px;
+        }
+        
+        .tool-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+            margin-top: 40px;
+        }
+        
+        .upload-section {
+            flex: 1;
+            min-width: 300px;
+            background: rgba(30, 30, 30, 0.7);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .preview-section {
+            flex: 1;
+            min-width: 300px;
+            background: rgba(30, 30, 30, 0.7);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .section-title {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: var(--accent-red);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .drop-area {
+            border: 2px dashed var(--secondary-blue);
+            border-radius: 10px;
+            padding: 40px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 20px;
+            background: rgba(30, 136, 229, 0.05);
+        }
+        
+        .drop-area:hover {
+            background: rgba(30, 136, 229, 0.1);
+            border-color: var(--accent-red);
+        }
+        
+        .drop-area i {
+            font-size: 3rem;
+            color: var(--secondary-blue);
+            margin-bottom: 15px;
+        }
+        
+        .file-input {
+            display: none;
+        }
+        
+        .btn {
+            background: var(--gradient-bg);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 50px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(106, 13, 173, 0.4);
+        }
+        
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 7px 20px rgba(106, 13, 173, 0.6);
+        }
+        
+        .btn:active {
+            transform: translateY(1px);
+        }
+        
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            box-shadow: none;
+        }
+        
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .preview-images {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .image-container {
+            position: relative;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .image-container img {
+            width: 100%;
+            display: block;
+        }
+        
+        .image-label {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 8px;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+        
+        .settings-panel {
+            margin-top: 30px;
+            background: rgba(40, 40, 40, 0.6);
+            padding: 20px;
+            border-radius: 10px;
+        }
+        
+        .setting-group {
+            margin-bottom: 15px;
+        }
+        
+        .setting-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        
+        .setting-group select, .setting-group input {
+            width: 100%;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 5px;
+            color: white;
+        }
+        
+        .ad-container {
+            margin: 40px 0;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            border: 1px dashed rgba(255, 255, 255, 0.2);
+        }
+        
+        .ad-label {
+            font-size: 0.8rem;
+            opacity: 0.7;
+            margin-bottom: 10px;
+        }
+        
+        .premium-features {
+            margin-top: 40px;
+            background: rgba(106, 13, 173, 0.2);
+            padding: 25px;
+            border-radius: 15px;
+            border-left: 5px solid var(--accent-red);
+        }
+        
+        .premium-features h3 {
+            margin-top: 0;
+            color: var(--accent-red);
+        }
+        
+        .feature-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .feature-card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+        
+        .feature-card:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-3px);
+        }
+        
+        .feature-card i {
+            color: var(--secondary-blue);
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .feature-card h4 {
+            margin: 0 0 8px 0;
+        }
+        
+        .feature-card p {
+            margin: 0;
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+        
+        footer {
+            margin-top: 60px;
+            text-align: center;
+            padding: 20px;
+            opacity: 0.7;
+            font-size: 0.9rem;
+        }
+        
+        @media (max-width: 768px) {
+            .tool-container {
+                flex-direction: column;
+            }
+            
+            .logo {
+                font-size: 2rem;
+            }
+        }
+        
+        /* Loading animation */
+        .loader {
+            display: none;
+            width: 50px;
+            height: 50px;
+            margin: 20px auto;
+            border: 5px solid rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            border-top: 5px solid var(--accent-red);
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Progress bar */
+        .progress-container {
+            width: 100%;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            margin: 20px 0;
+            display: none;
+        }
+        
+        .progress-bar {
+            height: 10px;
+            border-radius: 5px;
+            background: var(--gradient-bg);
+            width: 0%;
+            transition: width 0.3s;
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1 class="logo">VibeCut Pro</h1>
+            <p class="tagline">AI-Powered Background Removal with Perfect Precision</p>
+        </div>
+    </header>
+    
+    <div class="container">
+        <!-- Ad Space -->
+        <div class="ad-container">
+            <div class="ad-label">ADVERTISEMENT</div>
+            <!-- You would replace this with actual ad code -->
+            <div style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 5px;">
+                Premium Background Removal Tools - Try Our Pro Version!
+            </div>
+        </div>
+        
+        <div class="tool-container">
+            <div class="upload-section">
+                <h2 class="section-title"><i class="fas fa-cloud-upload-alt"></i> Upload Image</h2>
+                
+                <div class="drop-area" id="dropArea">
+                    <i class="fas fa-images"></i>
+                    <p>Drag & drop your image here or click to browse</p>
+                    <input type="file" id="fileInput" class="file-input" accept="image/*">
+                </div>
+                
+                <div class="controls">
+                    <button class="btn" id="uploadBtn"><i class="fas fa-upload"></i> Upload Image</button>
+                    <button class="btn btn-secondary" id="sampleBtn"><i class="fas fa-magic"></i> Try Sample</button>
+                </div>
+                
+                <div class="settings-panel">
+                    <h3><i class="fas fa-sliders-h"></i> Advanced Settings</h3>
+                    
+                    <div class="setting-group">
+                        <label for="edgePrecision">Edge Precision</label>
+                        <select id="edgePrecision">
+                            <option value="low">Low (Faster)</option>
+                            <option value="medium" selected>Medium (Balanced)</option>
+                            <option value="high">High (Slower)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="setting-group">
+                        <label for="bgColor">Background Color</label>
+                        <input type="color" id="bgColor" value="#1e88e5">
+                    </div>
+                    
+                    <div class="setting-group">
+                        <label for="outputFormat">Output Format</label>
+                        <select id="outputFormat">
+                            <option value="png">PNG (Transparent)</option>
+                            <option value="jpg">JPG (Solid BG)</option>
+                            <option value="webp">WebP (Smaller Size)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="preview-section">
+                <h2 class="section-title"><i class="fas fa-eye"></i> Preview & Download</h2>
+                
+                <div class="loader" id="loader"></div>
+                <div class="progress-container" id="progressContainer">
+                    <div class="progress-bar" id="progressBar"></div>
+                </div>
+                
+                <div class="preview-images">
+                    <div class="image-container">
+                        <img id="originalImage" src="https://via.placeholder.com/500x300?text=Original+Image" alt="Original Image">
+                        <div class="image-label">Original Image</div>
+                    </div>
+                    
+                    <div class="image-container">
+                        <img id="processedImage" src="https://via.placeholder.com/500x300?text=Processed+Image" alt="Processed Image">
+                        <div class="image-label">Background Removed</div>
+                    </div>
+                </div>
+                
+                <div class="controls">
+                    <button class="btn" id="downloadBtn" disabled><i class="fas fa-download"></i> Download Result</button>
+                    <button class="btn btn-secondary" id="shareBtn" disabled><i class="fas fa-share-alt"></i> Share</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Premium Upsell Section -->
+        <div class="premium-features">
+            <h3><i class="fas fa-crown"></i> Unlock Premium Features</h3>
+            <p>Upgrade to VibeCut Pro for enhanced capabilities and priority processing!</p>
+            
+            <div class="feature-list">
+                <div class="feature-card">
+                    <i class="fas fa-bolt"></i>
+                    <h4>Priority Processing</h4>
+                    <p>Jump the queue with faster AI processing times</p>
+                </div>
+                
+                <div class="feature-card">
+                    <i class="fas fa-image"></i>
+                    <h4>Batch Processing</h4>
+                    <p>Remove backgrounds from multiple images at once</p>
+                </div>
+                
+                <div class="feature-card">
+                    <i class="fas fa-palette"></i>
+                    <h4>Advanced Editing</h4>
+                    <p>Fine-tune edges and refine selections manually</p>
+                </div>
+                
+                <div class="feature-card">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <h4>HD Output</h4>
+                    <p>Download your images in up to 4K resolution</p>
+                </div>
+            </div>
+            
+            <button class="btn" style="margin-top: 20px; background: linear-gradient(to right, var(--accent-red), #ff8a00);">
+                <i class="fas fa-gem"></i> Upgrade to Pro - $9.99/month
+            </button>
+        </div>
+        
+        <!-- Second Ad Space -->
+        <div class="ad-container">
+            <div class="ad-label">SPONSORED</div>
+            <!-- You would replace this with actual ad code -->
+            <div style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 5px;">
+                Need professional graphics? Try our partner service!
+            </div>
+        </div>
+    </div>
+    
+    <footer>
+        <p>© 2023 VibeCut Pro - AI Background Remover Tool | <a href="#" style="color: var(--secondary-blue);">Privacy Policy</a> | <a href="#" style="color: var(--secondary-blue);">Terms of Service</a></p>
+        <p>Uses advanced AI technology to deliver perfect background removal in seconds</p>
+    </footer>
+    
+    <script>
+        // DOM Elements
+        const dropArea = document.getElementById('dropArea');
+        const fileInput = document.getElementById('fileInput');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const sampleBtn = document.getElementById('sampleBtn');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const shareBtn = document.getElementById('shareBtn');
+        const originalImage = document.getElementById('originalImage');
+        const processedImage = document.getElementById('processedImage');
+        const loader = document.getElementById('loader');
+        const progressContainer = document.getElementById('progressContainer');
+        const progressBar = document.getElementById('progressBar');
+        
+        // Event Listeners
+        dropArea.addEventListener('click', () => fileInput.click());
+        
+        fileInput.addEventListener('change', handleFiles);
+        
+        uploadBtn.addEventListener('click', () => fileInput.click());
+        
+        sampleBtn.addEventListener('click', useSampleImage);
+        
+        downloadBtn.addEventListener('click', downloadResult);
+        
+        shareBtn.addEventListener('click', shareResult);
+        
+        // Handle drag and drop
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropArea.addEventListener(eventName, preventDefaults, false);
+        });
+        
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropArea.addEventListener(eventName, highlight, false);
+        });
+        
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropArea.addEventListener(eventName, unhighlight, false);
+        });
+        
+        function highlight() {
+            dropArea.style.borderColor = 'var(--accent-red)';
+            dropArea.style.backgroundColor = 'rgba(255, 64, 129, 0.1)';
+        }
+        
+        function unhighlight() {
+            dropArea.style.borderColor = 'var(--secondary-blue)';
+            dropArea.style.backgroundColor = 'rgba(30, 136, 229, 0.05)';
+        }
+        
+        dropArea.addEventListener('drop', handleDrop, false);
+        
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            handleFiles({ target: { files } });
+        }
+        
+        // Handle file selection
+        function handleFiles(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            if (!file.type.match('image.*')) {
+                alert('Please select an image file.');
+                return;
+            }
+            
+            processImage(file);
+        }
+        
+        // Use sample image
+        function useSampleImage() {
+            // In a real app, you might use a sample image from your server
+            const sampleImageUrl = 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80';
+            
+            originalImage.src = sampleImageUrl;
+            simulateProcessing(sampleImageUrl);
+        }
+        
+        // Process the image (simulated)
+        function processImage(file) {
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                originalImage.src = e.target.result;
+                simulateProcessing(e.target.result);
+            };
+            
+            reader.readAsDataURL(file);
+        }
+        
+        // Simulate AI processing (in a real app, you'd call your backend/AI API)
+        function simulateProcessing(imageSrc) {
+            // Show loading state
+            loader.style.display = 'block';
+            progressContainer.style.display = 'block';
+            downloadBtn.disabled = true;
+            shareBtn.disabled = true;
+            
+            // Simulate progress
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += Math.random() * 10;
+                if (progress > 100) progress = 100;
+                progressBar.style.width = `${progress}%`;
+                
+                if (progress === 100) {
+                    clearInterval(interval);
+                    
+                    // In a real app, you would send the image to your AI backend
+                    // and receive the processed image in response
+                    
+                    // For demo purposes, we'll just use a placeholder
+                    setTimeout(() => {
+                        loader.style.display = 'none';
+                        
+                        // This is where you'd set the actual processed image
+                        // For demo, we're just using the original with a blue overlay
+                        processedImage.src = imageSrc;
+                        
+                        downloadBtn.disabled = false;
+                        shareBtn.disabled = false;
+                        
+                        // Show premium upsell after first successful processing
+                        showPremiumUpsell();
+                    }, 1000);
+                }
+            }, 200);
+        }
+        
+        // Download result
+        function downloadResult() {
+            // In a real app, you would generate the actual processed image
+            // For demo, we'll create a canvas with the original image and a colored overlay
+            
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            const img = new Image();
+            
+            img.onload = function() {
+                canvas.width = img.width;
+                canvas.height = img.height;
+                
+                // Draw original image
+                ctx.drawImage(img, 0, 0);
+                
+                // In a real app, this would be the actual AI processing
+                // For demo, we're adding a colored overlay to simulate background removal
+                ctx.fillStyle = document.getElementById('bgColor').value + '80'; // 50% opacity
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                // Create download link
+                const link = document.createElement('a');
+                link.download = 'vibecut-background-removed.png';
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            };
+            
+            img.src = originalImage.src;
+        }
+        
+        // Share result
+        function shareResult() {
+            // In a real app, implement actual sharing functionality
+            alert('Sharing feature would be implemented here. In a real app, this would allow sharing to social media or generating a shareable link.');
+        }
+        
+        // Show premium upsell
+        function showPremiumUpsell() {
+            // In a real app, you might track how many times the user has used the tool
+            // and show this after a certain number of free uses
+            console.log('Premium upsell could be shown here after X free uses');
+        }
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            // In a real app, you might check for saved settings or user preferences
+            console.log('VibeCut Pro initialized');
+        });
+    </script>
+</body>
+</html>
